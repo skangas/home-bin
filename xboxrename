@@ -1,0 +1,129 @@
+#!/usr/bin/perl
+#
+# xboxrename -- rename files into something that is accepted by the Xbox file
+# system (XFAT)
+#
+#########################################################################
+#
+# Copyright © 2005 Stefan Kangas <stefan@marxist.se>
+#
+#########################################################################
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+#########################################################################
+
+use warnings;
+use strict;
+
+use Getopt::Long;
+
+my $brackets;
+my $execute;
+my $removedash = 1;
+my $strip;
+my $space = ' ';
+my $verbose;
+
+# TODO: strip takes multiple options
+# TODO: remove brackets, keeping the word inside: [hej] -> hej
+
+GetOptions('brackets'   => \$brackets,
+	   'execute'    => \$execute,
+	   'removedash' => \$removedash,
+	   'space=s'    => \$space,
+	   'strip=s'      => \$strip,
+	   'verbose'    => \$verbose,
+);
+
+while (<*>) {
+    my $name = $_;
+    my $newname;
+    
+    if (-d $name) {
+	$newname = xboxname($name, 1);
+    } else {
+	$newname = xboxname($name, 0);
+    }
+
+    if ($name ne $newname and not -e $newname) {
+        printf("%s\n%s\n\n", $name, $newname);
+        rename $name, $newname
+	  if $execute;
+    }
+}
+
+sub xboxname {
+    my $name = shift;
+    my $isdir = shift;
+    my $origname = $name;
+    my $ext;
+
+    # Strip unwanted stuff
+    $name =~ s/$strip//
+      if defined $strip;
+    
+    # Yes, there _is_ a good reason for the internal ordering of the regexps
+
+    # FIXME: Should allow ASCII-characters (128 bit)
+
+    # Remove some weird characters
+    $name =~ s/[²!'`΄,]|\n//g;
+
+    # Convert swedish characters
+    $name =~ s/[εδ]/a/g;
+    $name =~ s/φ/o/g;
+
+    # Remove [brackets]
+    $name =~ s/\[.+?\]//g if $brackets;
+
+    # Strip and transform the extension to four characters
+    unless ($isdir) {
+	# Strip the extension 
+	$ext = (split /\./, $name)[-1];
+	$name =~ s/\.$ext$//;
+
+	# Change the extension to three characters
+	$ext = lc $ext;
+	$ext =~ s/mpeg/mpg/;
+
+	if (length $ext > 3 || length $ext < 0) {
+	    warn "I don't know what to do with the extension: $ext"
+	      if $verbose;
+	    return $origname;
+	}
+    }
+
+    my $delimiter = '[\s_.]';
+
+    # Remove duplicate word delimiters
+    $name =~ s/($delimiter){1,2}/ /g;
+
+    # Exchange all word delimiters for $space
+    $name =~ s/$delimiter/$space/g;
+
+    # Remove leading and trailing word delimiters 
+    $name =~ s/\A$delimiter+//;
+    $name =~ s/$delimiter+\z//;
+
+    # remove dash
+    $name =~ s/$space-$space/$space/g
+      if $removedash;
+
+    if ($isdir) {
+	return sprintf("%.42s", $name);
+    } else {
+	return sprintf("%.37s.%.3s", $name, $ext);
+    }
+}

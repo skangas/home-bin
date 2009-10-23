@@ -1,0 +1,63 @@
+#!/usr/bin/perl
+#
+#########################################################################
+#
+# Copyright © 2007-2009 Stefan Kangas <stefan@marxist.se>
+#
+#########################################################################
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+#########################################################################
+
+use strict;
+use warnings;
+
+use Getopt::Long;
+use String::MkPasswd qw(mkpasswd);
+
+my $length = 8;
+my $num = 10;
+
+GetOptions(
+    'length=i' => \$length,
+    'number=i' => \$num,
+) or die "Unable to get command line options.";
+
+my $minnum     = int( $length / 5 ) || 1;
+my $minupper   = int( $length / 4 ) || 1;
+#my $minspecial = int( $length / 5 ) || 1;
+my $minspecial=0;
+
+print "number:     $num\n";
+print "length:     $length\n";
+print "minnum:     $minnum\n";
+print "minspecial: $minspecial\n";
+print "minupper:   $minupper\n";
+print "\n";
+
+# do it
+for ( my $i = 0; $i < $num; $i++ ) {
+
+    print mkpasswd(
+	-length     => $length,
+	-minnum     => 2,
+	-minlower   => 1,   # minlower is increased if necessary
+	-minupper   => $minupper,
+	-minspecial => $minspecial,
+	-distribute => 1,
+    );
+    print "\n";
+}
+

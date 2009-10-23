@@ -1,0 +1,28 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use diagnostics;
+
+use Tk;
+
+my $mw = MainWindow->new(-title => 'lexin');
+$mw->bind($mw, "<Return>" => \&exit);
+my $text = $mw->Text(qw( -height 10 -width 90 ))->pack;
+$mw->resizable(0,0);
+
+(my $keyword = $mw->SelectionGet(selection => 'string')) =~ s/\W+//g;
+
+open (LEXIN, '-|', "$ENV{HOME}/bin/lexin.sh -e $keyword");
+
+while (defined(my $line = <LEXIN>)) {
+    $text->insert("end", $line);
+}
+
+close LEXIN;
+
+MainLoop;
+
+# TODO
+# Kolla upp en engelsk definition på ordet om det inte finns någon
+# översättning på lexin

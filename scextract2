@@ -1,0 +1,386 @@
+#!/usr/bin/perl
+#
+# scextract2 -- extracts a scene release
+#
+#########################################################################
+#
+# Copyright © 2007-2009 Stefan Kangas <stefan@marxist.se>
+#
+#########################################################################
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+#########################################################################
+
+use warnings;
+use strict;
+
+use Data::Dumper;
+use Cwd qw(cwd abs_path);
+use Getopt::Long;
+
+package main;
+
+our $log;
+
+# TODO
+
+# automatic sorting into directories
+# check sfv
+# - default behaviour should be to do so upon validating release
+# - option to do only if extract failed? (we might have incomplete downloads)
+# - option not valid release if there isn't an SFV
+# automatic ftp upload - Net::FTP?
+
+my %conf = ('cksfv' => 0,
+	    'debug' => 0,
+	    'keepcue' => 0,
+	    'logfile' => '/home/kangas/xbox/upload/logfile',
+	    'pretend' => 0,
+	    'rename' => 1,
+	    'remove' => 0,
+	    'target' => '/home/kangas/xbox/upload',
+	    'unrar' => '/usr/bin/unrar',
+	    'verbose' => 1,
+	    'quiet' => 0,
+	    'xbox' => 1,
+	   );
+
+GetOptions(#'cksfv'   => \$conf{cksfv},
+	   'debug'    => \$conf{debug},
+	   'keepcue'  => \$conf{keepcue},
+	   'pretend'  => \$conf{pretend},
+	   'remove'   => \$conf{remove},
+	   'rename'   => \$conf{rename},
+	   'target=s' => \$conf{target},
+	   'verbose'  => \$conf{verbose},
+	   'quiet'    => \$conf{quiet},
+) or die "Unable to get command line options.";
+
+my @releases;
+
+# CLEANUP
+local $SIG{INT} = sub {
+    for my $release (@releases) {
+	dprint("\n");
+	for my $file (@{$release->{files}}) {
+	    dprint("cleanup: Removing $file->[0]\n");
+	    unlink $conf{target} . '/' . $file->[0] if -e $conf{target} . '/' . $file->[0];
+	    unlink $conf{target} . '/' . $file->[1] if -e $conf{target} . '/' . $file->[1];
+	}
+    }
+    die "\nAborting...\n";
+};
+
+# Use cwd if we didn't get directory in argument
+if (not @ARGV) {
+    my $dir = cwd();
+    opendir(my $fh, $dir)
+      or die "Unable to open directory $dir: $!";
+    # we want a directory that does not start with dot
+    @ARGV = grep { -d $_ } grep { /^[^\.]/ } readdir($fh);
+    closedir($fh)
+      or die "Unable to close directory $dir: $!";
+}
+unless (-e $conf{unrar} && -x $conf{unrar}) {
+    die "$conf{unrar} is not executable."
+}
+
+# Find releases
+vprint("I will process the marked directories:\n\n");
+while (my $dir = shift) {
+    my $release;
+    $dir =~ s/\/+$//;
+    next unless (-d $dir and -r $dir and -x $dir);
+
+    $release = parse_release($dir);
+
+    if (defined $release) {
+	push @releases, $release;
+	vprint(" * ");
+    } else {
+	vprint("   ");
+    }
+    vprint($dir . "\n");
+}
+
+# Do we have any work?
+if (@releases && not $conf{pretend}) {
+    print "\nExtracting to $conf{target}\n\n";
+} else {
+    print "\nNothing to do, aborting\n";
+    exit;
+}
+
+# Extract the releases
+for my $release (@releases) {
+    extract_release($release, $conf{target});
+}
+print "\n";
+
+# Rename extracted files
+if ($conf{rename}) {
+    for my $release (@releases) {
+	for my $file (@{$release->{files}}) {
+	    printlog("rename from $file->[0]");
+	    printlog("rename   to $file->[1]");
+	    rename($conf{target} . '/' . $file->[0], $conf{target} . '/' . $file->[1]);
+	    if ($file->[1] =~ /\.cue$/ and not $conf{keepcue}) {
+		unlink $conf{target} . '/' . $file->[1];
+	    }
+	}
+    }
+}
+
+# Remove releases
+if ($conf{remove}) {
+    # We don't want to remove anything we've extracted beyond this point
+    local $SIG{INT} = sub {
+	die "\nAborting...\n";
+    };
+
+    for my $release (@releases) {
+	next if not defined $release;
+	my $command = "rm -rf " . $release->{path};
+
+	# Give the user some time to abort
+	print "$command in ";
+	for (my $i = 5; $i > 0; $i--) {
+	    print "$i ";
+	    sleep 1;
+	}
+	print "...\n";
+
+	system($command);
+	printlog($command);
+    }
+}
+
+##
+## SUBROUTINES
+##
+sub extract_release {
+    my $release = shift;
+    my $target = shift;
+    my ($ok, $command);
+    
+    my $rars = $release->{rar};
+    my $cdnum;
+    for my $rar (@$rars) {
+	$cdnum++;
+	my $num_of_rars = $rar->[1];
+	my $num_of_cds = scalar(@$rars);
+	my $prefix = sprintf("\r%.60s", $release->{name});
+	$prefix .= " (CD$cdnum/$num_of_cds)"
+	  if ($num_of_cds > 1);
+	$prefix .= ":";
+	$rar = $rar->[0];
+
+	# disable buffering on STDOUT
+	$| = 1;
+
+	# make a list of the files we are about to extract
+	$command = join(" ", $conf{unrar}, 'l', sh_escape($rar), "2>&1 |");
+	open (FH, $command);
+	while (defined(my $line = <FH>)) {
+	    if ($line =~ /^ (\S+)\s+\d+\s+\d+/) {
+		my $file = $1;
+		if ($file =~ /\.(?:avi|mpg|bin|cue)$/) {
+		    my $newname = name($file, $release->{name}, $cdnum, $num_of_cds);
+		    push @{$release->{files}}, [ $file, $newname ];
+		    dprint("Will rename $file to $newname\n");
+		} else {
+		    print "$prefix FAILED!";
+		    printlog("$release->{name} failed, does not look like a release that I can handle (yet)");
+		    $release = undef;
+		    return undef;
+		}
+	    }
+	}
+
+	# extract the archive
+	$command = join " ", $conf{unrar}, 'x', sh_escape($rar), $target, "|";
+	my $rarnum;
+	open(FH, $command)
+	  or die "Unable to open $command: $!";
+	while (defined(my $line = <FH>)) {
+	    if (not $line =~ /\S/) {
+		# skip blank lines immediately
+		next;
+	    } elsif ($line =~ /^Extracting from .*/) {
+		$rarnum++;
+	    } elsif ($line =~ /^\.\.\./
+		    || $line =~ /^Extracting .*/) {
+		print "$prefix $rarnum/$num_of_rars";
+	    } elsif ($line =~ /^All OK/) {
+		printlog("$release->{name} OK");
+		$ok = 1;
+	    } elsif ($line =~ /is not RAR archive/) {
+		print "$prefix FAILED!";
+		printlog("$release->{name} failed: " . chomp $line);
+		$release = undef;
+		return undef;
+	    }
+	}
+	close FH
+	  or die "Unable to close $command: $!";
+
+	# something went wrong, clean up and bail out
+	if (not $ok) {
+	    printlog("$release->{name} FAILED");
+	    print "$prefix FAILED!\n";
+	    for my $file (@{$release->{files}}) {
+		dprint("cleanup: Removing $file->[0]\n");
+		unlink $conf{target} . '/' . $file->[0] if -e $conf{target} . '/' . $file->[0];
+	    }
+	    $release = undef;
+	    return undef;
+	}
+	print "$prefix DONE!\n";
+    }
+    return 1;
+}
+
+# parse a release directory, return hash that can be passed to extract_release
+sub parse_release {
+    my $dir = shift;
+    my %release = ('path' => $dir);
+    my $rar;
+
+    # Release name is last part of path excluding the release group
+    $release{name} = (split(/\//, $dir))[-1];
+    $release{name} =~ s/-[\w\d]+$//;
+
+    # Is there only one directory on the rar?
+    if (defined($rar = getrar($dir))) {
+	$release{rar}[0] = $rar;
+	return \%release;
+    }
+
+    # Do the release have multiple directories?
+    opendir(my $fh, $dir)
+      or die "Unable to open directory $dir: $!";
+    my @files = sort readdir($fh);
+    closedir($fh)
+      or die "Unable to close directory $dir: $!";
+    my $cdcount = 1;
+    for my $file (@files) {
+	next if not -r "$dir/$file" and not -d "$dir/$file";
+	if ($file =~ /^cd(\d)$/i) {
+	    $cdcount++ == $1 or return undef;
+	    if (defined($rar = getrar("$dir/$file"))) {
+		$release{rar}[$1 - 1] = $rar;
+	    } else {
+		return undef;
+	    }
+	}
+    }
+
+    if (not defined $release{rar}) {
+	return undef;
+    } else {
+	return \%release;
+    }
+}
+
+# get the first file of a multi-part archive
+sub getrar {
+    my $dir = shift;
+    my ($rar, $rarcount);
+
+    opendir(my $fh, $dir)
+      or die "Unable to open directory $dir: $!";
+    my @files = readdir($fh);
+    closedir($fh)
+      or die "Unable to close directory $dir: $!";
+
+    for my $file (@files) {
+	if ($file =~ /\.(rar|r\d{2}|\d{3})$/) {
+	    $rarcount++;
+	}
+	next if defined $rar;
+	if ($file =~ /\.part01.rar$/i
+	    || $file =~ /\.rar$/i
+	    || $file =~ /\.001$/) {
+	    $rar = "$dir/$file";
+	}
+    }
+
+    if (not defined $rar) {
+	return undef;
+    } else {
+	return [$rar, $rarcount];
+    }
+}
+
+sub name {
+    my $name = shift;
+    my $relname = shift;
+    my $num = @_ ? shift : 1;
+    my $maxnum = @_ ? shift : 1;
+
+    my $format = "%s%s";
+    my $end = '';
+
+    # last part of filename
+    if ($maxnum > 1) {
+	$end .= ".CD$num";
+    }
+    if ($name =~ /(\.(avi|mpg|bin|cue))$/) {
+	$end .= $1;
+    }
+
+    # XBOX doesn't support filenames > 40 chars
+    if ($conf{xbox}) {
+	# fixme: don't split tags, prioritize SXXEXX-tags
+	# remove some less interesting tags
+	my $tags = join "|", qw"proper limited xvid svcd swedish
+		                int(?:ernal)? re(?:pack|rip) (?:s|pd)tv";
+	$relname =~ s/\.(?:$tags)//gi;
+
+	$relname =~ s/\.$//g;
+
+#	$format = "%." . (40 - length($end)) . "s";
+	$format = "%." . 40 . "s";
+	$format .= "%." . length($end) . "s";
+    }
+
+    my $retval = sprintf($format, $relname, $end);
+    $retval =~ s/\.{2,}/./;
+    return $retval;
+}
+
+# escape special characters for shell
+sub sh_escape {
+    my $name = shift;
+    $name =~ s#([|&;()<>"'\$\t;])#\\$1#g;
+    return "\"" . $name . "\"";
+}
+
+sub printlog {
+    my $message = shift;
+    unless ($log) {
+	open($log, ">>", $conf{logfile})
+	  or die "Unable to open $conf{logfile}";
+    }
+    print $main::log $message . "\n";
+}
+
+sub vprint {
+    $conf{verbose} && print for @_;
+}
+
+sub dprint {
+    $conf{debug} && print for @_;
+}
