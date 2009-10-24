@@ -94,7 +94,7 @@ function create_new_repos () {
 
     # add configuration file for mr
     mkdir -p ~/.mr
-    cat <<_eof >> ~/.mr/$repos_name
+    cat <<_eof >> ~/.mrconfig
 [$VH_BASE_SUFFIX/$repos_name.git]
 checkout = git_fake_bare_checkout '$ORIGIN_BASE$repos_name.git' '$repos_name.git' '../../'
 
