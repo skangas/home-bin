@@ -1,0 +1,3 @@
+#!/bin/bash
+
+MOZILLA_NO_JEMALLOC=0 /usr/bin/conkeror
