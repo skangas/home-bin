@@ -36,9 +36,9 @@
 
 # This is the local base of your repositorys.
 if [ -z "$VH_BASE_SUFFIX" ]; then
-    VH_BASE_SUFFIX="/.etc"
+    VH_BASE_SUFFIX=".etc"
 fi
-VH_BASE="$HOME$VH_BASE_SUFFIX"
+VH_BASE="$HOME/$VH_BASE_SUFFIX"
 
 # This is the remote base of your repositorys.
 ORIGIN_BASE="gitosis@git.marxist.se:"
