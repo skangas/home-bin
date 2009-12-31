@@ -37,8 +37,8 @@ GetOptions(
 
 my $minnum     = int( $length / 5 ) || 1;
 my $minupper   = int( $length / 4 ) || 1;
-#my $minspecial = int( $length / 5 ) || 1;
-my $minspecial=0;
+my $minspecial = int( $length / 5 ) || 1;
+#my $minspecial=0;
 
 print "number:     $num\n";
 print "length:     $length\n";
