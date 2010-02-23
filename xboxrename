@@ -1,13 +1,13 @@
 #!/usr/bin/perl
-#
+
 # xboxrename -- rename files into something that is accepted by the Xbox file
 # system (XFAT)
 #
-#########################################################################
+##
 #
-# Copyright © 2005 Stefan Kangas <stefan@marxist.se>
+# Copyright Β© 2005-2010 Stefan Kangas <skangas@skangas.se>
 #
-#########################################################################
+##
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,109 +21,81 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-#########################################################################
 
+use 5.010;
 use warnings;
 use strict;
+use utf8;
+use encoding ':locale';
 
 use Getopt::Long;
+use Path::Class;
 
-my $brackets;
 my $execute;
-my $removedash = 1;
-my $strip;
-my $space = ' ';
-my $verbose;
+GetOptions( 'execute'    => \$execute );
 
-# TODO: strip takes multiple options
-# TODO: remove brackets, keeping the word inside: [hej] -> hej
+for my $name (glob "*") {
+    # Since glob doesn't use utf8 by default we need to explicitly upgrade here
+    # in addition to use encoding above
+    utf8::upgrade($name);
+    my $newname = mk_xbox_name($name);
 
-GetOptions('brackets'   => \$brackets,
-	   'execute'    => \$execute,
-	   'removedash' => \$removedash,
-	   'space=s'    => \$space,
-	   'strip=s'      => \$strip,
-	   'verbose'    => \$verbose,
-);
-
-while (<*>) {
-    my $name = $_;
-    my $newname;
-    
-    if (-d $name) {
-	$newname = xboxname($name, 1);
-    } else {
-	$newname = xboxname($name, 0);
-    }
-
-    if ($name ne $newname and not -e $newname) {
-        printf("%s\n%s\n\n", $name, $newname);
-        rename $name, $newname
-	  if $execute;
+    if ( $name ne $newname && ! -e $newname ) {
+        printf("%s -> %s\n", $name, $newname);
+        if ($execute) {
+            rename $name, $newname;
+        }
     }
 }
 
-sub xboxname {
-    my $name = shift;
-    my $isdir = shift;
-    my $origname = $name;
-    my $ext;
+sub mk_xbox_name {
+    my ($name) = @_;
 
-    # Strip unwanted stuff
-    $name =~ s/$strip//
-      if defined $strip;
+    ### NOTE: Order of the regexps matter
+
+    ### 1
     
-    # Yes, there _is_ a good reason for the internal ordering of the regexps
+    ### Convert swedish characters
+    $name =~ s/[Γ¥Γ¤]/a/g;
+    $name =~ s/Γ¶/o/g;
 
-    # FIXME: Should allow ASCII-characters (128 bit)
+    ### Remove some shit
+    $name =~ s/\[.+?\]       ### [brackets] including their content
+               |[^[:ascii:]] ### everything outside ASCII
+               |[Β²!'`Β΄,]     ### remove some other weird characters
+               |\n|\r|\t     ### newline or tab shouldn't be in filename
+              //msxg;
 
-    # Remove some weird characters
-    $name =~ s/[²!'`΄,]|\n//g;
-
-    # Convert swedish characters
-    $name =~ s/[εδ]/a/g;
-    $name =~ s/φ/o/g;
-
-    # Remove [brackets]
-    $name =~ s/\[.+?\]//g if $brackets;
-
-    # Strip and transform the extension to four characters
-    unless ($isdir) {
-	# Strip the extension 
-	$ext = (split /\./, $name)[-1];
+    ### 2
+    
+    ### Strip the extension 
+    my $ext;
+    if (! -d $name) {
+	$ext = (split /[.]/, $name)[-1];
 	$name =~ s/\.$ext$//;
-
-	# Change the extension to three characters
 	$ext = lc $ext;
 	$ext =~ s/mpeg/mpg/;
-
-	if (length $ext > 3 || length $ext < 0) {
-	    warn "I don't know what to do with the extension: $ext"
-	      if $verbose;
-	    return $origname;
-	}
     }
 
+    ### 3
+    
+    ### Remove duplicate word delimiters
     my $delimiter = '[\s_.]';
+    $name =~ s/($delimiter)+/$1/g;
+    ### Remove leading and trailing word delimiters 
+    $name =~ s/\A$delimiter+
+           |$delimiter+\z
+              //msxg;
+    ### remove dash
+    $name =~ s/$delimiter-$delimiter/-/g;
 
-    # Remove duplicate word delimiters
-    $name =~ s/($delimiter){1,2}/ /g;
-
-    # Exchange all word delimiters for $space
-    $name =~ s/$delimiter/$space/g;
-
-    # Remove leading and trailing word delimiters 
-    $name =~ s/\A$delimiter+//;
-    $name =~ s/$delimiter+\z//;
-
-    # remove dash
-    $name =~ s/$space-$space/$space/g
-      if $removedash;
-
-    if ($isdir) {
-	return sprintf("%.42s", $name);
+    if (-d $name) {
+	return sprintf('%.42s', $name);
     } else {
-	return sprintf("%.37s.%.3s", $name, $ext);
+        my $extlen = length $ext;
+        my $ext_format  = '%.' . $extlen        . 's';
+        my $name_format = '%.' . (41 - $extlen) . 's';
+        my $format      = "$name_format.$ext_format";
+	return sprintf $format, $name, $ext;
     }
 }
