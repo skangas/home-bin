@@ -31,13 +31,25 @@ use encoding ':locale';
 use Getopt::Long;
 use Path::Class;
 
+my $directory;
 my $execute;
-GetOptions( 'execute'    => \$execute );
+
+GetOptions(
+    'directory=s'  => \$directory,
+    'execute'    => \$execute,
+);
+
+if (defined $directory) {
+    chdir $directory;
+} 
 
 for my $name (glob "*") {
     # Since glob doesn't use utf8 by default we need to explicitly upgrade here
-    # in addition to use encoding above
+    # in addition to using encoding above
     utf8::upgrade($name);
+
+    next unless -f $name or -d $name;
+    
     my $newname = mk_xbox_name($name);
 
     if ( $name ne $newname && ! -e $newname ) {
@@ -53,49 +65,72 @@ sub mk_xbox_name {
 
     ### NOTE: Order of the regexps matter
 
-    ### 1
+    ### 1 --- REMOVE ILLEGAL CHARACTERS
     
-    ### Convert swedish characters
+    # Convert swedish characters
     $name =~ s/[åä]/a/g;
     $name =~ s/ö/o/g;
 
-    ### Remove some shit
-    $name =~ s/\[.+?\]       ### [brackets] including their content
-               |[^[:ascii:]] ### everything outside ASCII
-               |[²!'`´,]     ### remove some other weird characters
-               |\n|\r|\t     ### newline or tab shouldn't be in filename
+    # Remove some shit
+    $name =~ s/\(\w+\)       ### remove parens
+               |[^[:ascii:]] ### remove everything outside ASCII
+               |[²'`´,]      ### remove some other weird characters
+               |\n|\r|\t     ### remove newline or tab shouldn't be in filename
+               #|\s+          ### remove whitespace
               //msxg;
 
-    ### 2
+    ### 2 --- REMOVE WORDS IN BRACKETS
     
-    ### Strip the extension 
+    $name =~ s/((\[.+?\])+)//;
+    my $brackets = $&;
+    $brackets = "" if not defined $brackets;
+
+    ### 3 --- STRIP THE EXTENSION OF A FILE
+
     my $ext;
-    if (! -d $name) {
+    if (not -d $name) {
+        # strip it
 	$ext = (split /[.]/, $name)[-1];
 	$name =~ s/\.$ext$//;
+
+        # make extension prettier
 	$ext = lc $ext;
 	$ext =~ s/mpeg/mpg/;
     }
 
-    ### 3
+    ### 4 --- ADDITIONAL CLEANUP
     
-    ### Remove duplicate word delimiters
     my $delimiter = '[\s_.]';
+
+    # Remove duplicate word delimiters
     $name =~ s/($delimiter)+/$1/g;
-    ### Remove leading and trailing word delimiters 
+
+    # Remove leading and trailing word delimiters 
     $name =~ s/\A$delimiter+
            |$delimiter+\z
               //msxg;
-    ### remove dash
+
+    # Remove delimiters around dash
     $name =~ s/$delimiter-$delimiter/-/g;
 
+    # remove trailing dot
+    $name =~ s!\.$!!;
+
+    ### 5 --- MAKE NEW NAME
+    
     if (-d $name) {
+        ### directory
 	return sprintf('%.42s', $name);
     } else {
-        my $extlen = length $ext;
-        my $ext_format  = '%.' . $extlen        . 's';
-        my $name_format = '%.' . (41 - $extlen) . 's';
-        my $format      = "$name_format.$ext_format";
-	return sprintf $format, $name, $ext;
+        ### file
+
+        ### put brackets back at the end of too long strings
+        $name .= $brackets;
+        my $maxlen = 42 - length($ext) - 1; # - 1 for the '.' character
+        if (length $name > $maxlen) {
+            substr $name, $maxlen - length $brackets, length $brackets, $brackets;
+        }
+
+        return join ".", substr($name, 0, $maxlen), $ext;
     }
 }
