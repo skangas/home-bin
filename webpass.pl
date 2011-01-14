@@ -20,7 +20,7 @@ my $site = $ARGV[0];
 my $passfile = $ARGV[1];
 
 $site //= "example.com";
-$passfile //= "$ENV{HOME}/bin/.webpass"
+$passfile //= "$ENV{HOME}/bin/.webpass";
 
 my $pass = slurp($passfile);
 
