@@ -1,6 +1,6 @@
 #!/bin/bash -l
 
-export PERL5LIB=/home/skangas/usr/lib/perl5
+export PERL5LIB=$HOME/usr/lib/perl5
 
 set +o noclobber
 
