@@ -11,13 +11,13 @@ function do_backup {
 do_backup   .crypt      $HOME
 do_backup   cbt         $HOME
 
+do_backup   Maildir     $HOME
+do_backup   News        $HOME
+
 # Not very critical stuff
 do_backup   books       $HOME
 
 # do_backup   .gnupg      $HOME
-# do_backup   Mail        $HOME
-# do_backup   Maildir     $HOME
-# do_backup   News        $HOME
 # do_backup   code        $HOME
 # do_backup   dokument    $HOME
 # do_backup   org        $HOME
