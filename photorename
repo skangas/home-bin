@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# photorename -- this script renames all photos under cwd and recurrsively from
+# photorename -- this script renames all photos under cwd and recursively from
 # arbitrary filenames to filenames reflecting the moment they were shot. this is
 # based on the EXIF information contained in the photo
 #
