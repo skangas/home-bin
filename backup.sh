@@ -1,12 +1,25 @@
 #!/bin/bash
 
-sudo mount /mnt/backup/
-mount | grep "on /mnt/backup type"
+BACKUP_DIRECTORY=/mnt/backup
+HOST=`hostname`
 
-if [[ "$?" == 0 ]]; then
-    sudo rsync -auvx -E -H --delete --ignore-errors \
-    / /home /var /usr /home/skangas/windows /mnt/backup/slash/
-else
+# mount as needed
+if [ `mount | grep "on /mnt/backup type" > /dev/null` ]; then
+    # FIXME
+    mount /mnt/backup/
+fi
+
+# do the backup only when mount scuceded
+if [ `mount | grep "on /mnt/backup type" > /dev/null` ]; then
     exit 1
 fi
+
+nice -n 19 ionice -c 3 \
+    rsync \
+    -auvx -E -H --delete-before --delete-excluded --ignore-errors --verbose --progress \
+    --exclude=/dev --exclude=/proc --exclude=/sys --exclude=/var/cache/apt/archives --exclude=/var/lib/apt/lists/ \
+    --exclude=/home/skangas/.wine \
+    / /home /usr /var $BACKUP_DIRECTORY/$HOST
+
+
 
