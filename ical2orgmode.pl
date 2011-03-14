@@ -8,7 +8,7 @@ use 5.010;
 
 =head1 NAME
 
-ical2orgmode.pl - Convert iCalendar files to org-mode files
+ical2orgmode.pl - Convert iCalendar to org-mode format
 
 =cut
 
@@ -75,28 +75,22 @@ sub get_properties {
     return %props;
 }
 
-=head1 AUTHOR
-
-Stefan Kangas <stefan at marxist.se>
 
 =head1 CAVEAT
 
 This code will silently discard any data that looks unfamiliar.
 
-=head1 BUGS
+=head1 AUTHOR
 
-Please report any bugs to C<< <stefan at marxist.se> >>
+Stefan Kangas C<< <skangas at skangas.se> >>
 
-=head1 COPYRIGHT & LICENSE
+=head1 COPYRIGHT
 
-Copyright 2010 Stefan Kangas, all rights reserved.
+Copyright (c) 2010,2011 Stefan Kangas, all rights reserved.
+
+=head1 LICENSE
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as perl itself.
 
 =cut
-
-1; # End of ical2orgmode.pl
-
-__END__
-
