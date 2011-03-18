@@ -32,20 +32,23 @@ for my $entry (@{$cal->entries}) {
 
     ### SUMMARY
     my $summary = $prop{'summary'};
-    $summary =~ s/--\n//;
+    # $summary =~ s/--\n//;
 
-    $summary =~ s/TKITE-2//;
-    $summary =~ s/DatavprT\d?//;
+    $summary =~ s/
+                 ( TKITE-2
+                 | TKDAT-2
+                 | MPSEN-1
+                 )
+                 //x;
+    $summary =~ s/TKITE-2//;    
+    $summary =~ s/^(.*)(?:Föreläsning|Förel)/Föreläsning: $1/sx;
+    $summary =~ s/^(.*)(?:Övning|Övn)/Övning: $1/sx;
+    $summary =~ s/^(.*)(?:Handledning|Handleding)/Handledning: $1/sx;
+    $summary =~ s/^(.*)(?:Laboration|Lab)/Laboration: $1/sx;
 
-    $summary =~ s/^(.*)Förel/Föreläsning: $1/sx;
-    $summary =~ s/^(.*)Övn/Övning: $1/sx;
-    $summary =~ s/^(.*)Lab/Lab: $1/sx;
-
-    $summary =~ s/DIT90GU-1//;
-    $summary =~ s/DIT960GU/Datastrukturer/;
-    $summary =~ s/(TMV026)//;
-
+    # Limit to one space
     $summary =~ s/\s+/ /g;
+    # Remove whitespace at beginning/end of line
     $summary =~ s/( ^\s+ | \s+$ )//gix;
 
     $summary .= ' [' . $prop{'location'} . ']';
@@ -80,13 +83,9 @@ sub get_properties {
 
 This code will silently discard any data that looks unfamiliar.
 
-=head1 AUTHOR
-
-Stefan Kangas C<< <skangas at skangas.se> >>
-
 =head1 COPYRIGHT
 
-Copyright (c) 2010,2011 Stefan Kangas, all rights reserved.
+Copyright (c) 2010,2011 Stefan Kangas C<< <skangas at skangas.se> >>, all rights reserved.
 
 =head1 LICENSE
 
