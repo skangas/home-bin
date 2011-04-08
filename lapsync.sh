@@ -17,8 +17,15 @@ do_backup   News        $HOME
 # Not very critical stuff
 do_backup   books       $HOME
 
+
+# Should be moved to git
+do_backup   dokument    $HOME
+
 # do_backup   .gnupg      $HOME
 # do_backup   code        $HOME
-# do_backup   dokument    $HOME
+
+# Not for now
+
 # do_backup   org        $HOME
-# do_backup   wip/        $HOME/wip/lenin
+do_backup   wip/        $HOME/wip/lenin
+
