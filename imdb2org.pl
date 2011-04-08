@@ -34,7 +34,7 @@ sub isay {
     my $data .= join "", @_;
 
     if (length $data > 0) {
-        say " " x 2 . "$prefix: $data";
+        say "$prefix: $data";
     }
 }
 
@@ -90,7 +90,7 @@ sub rating {
 
 
 say "* " . $film->title() . " (" . $film->year() . ")";
-say "  :PROPERTIES:";
+say ":PROPERTIES:";
 
 
 isay "Genres", genres $film->genres();
@@ -104,13 +104,10 @@ isay "Duration", $film->duration;
 isay "Country", country $film->country;
 isay "Language", language $film->language;
 isay "Awards", awards $film->awards;
+isay "Link", "[[$ARGV[0]][IMDB]]";
 
 
-say "  :END:";
-
-say "";
-isay "[[IMDB][" . "]";
-say "";
+say ":END:";
 
 =head1 AUTHOR
 
