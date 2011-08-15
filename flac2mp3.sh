@@ -32,7 +32,7 @@ TRACKNUMBER=`metaflac "$a" --show-tag=TRACKNUMBER | sed s/.*=//g`
 DATE=`metaflac "$a" --show-tag=DATE | sed s/.*=//g`
 
 flac -c -d "$a" | lame -m j -q 0 $LAMEQUALOPT - "$OUTF"
-id3 -t "$TITLE" -T "${TRACKNUMBER:-0}" -a "$ARTIST" -A "$ALBUM" -y "$DATE" -g "${GENRE:-12}" "$OUTF"
+id3v2 -2 -t "$TITLE" -T "${TRACKNUMBER:-0}" -a "$ARTIST" -A "$ALBUM" -y "$DATE" -g "${GENRE:-12}" "$OUTF"
 
 done
 
