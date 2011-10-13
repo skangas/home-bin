@@ -44,5 +44,19 @@ for mod in $modules; do
 
     if [ "$version" != "$installed" ]; then
         echo "$mod needs upgrading. Version $version available but only $installed installed."
+
+        dh_out=$(dh-make-drupal $mod_name 2>&1)
+        package=$(echo "$dh_out" | grep 'dpkg-deb: building package' | sed 's/^dpkg-deb: building package `\S\+'\'' in `..\/\(\S\+\)'\''\.$/\1/')
+
+        if [ -n "$package" ]; then
+            echo "Successfully built $package."
+        else
+            echo "Unable to build package. dh-make-drupal gave the following error:"
+            echo "$dh_out"
+        fi
+    else
+        echo "$mod is uptodate."
     fi
+
 done
+
