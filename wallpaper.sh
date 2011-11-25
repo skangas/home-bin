@@ -1,21 +1,27 @@
 #!/bin/bash
 
-WALLPAPERS="$HOME/.backgrounds"
+wallpapers="$HOME/.backgrounds/`hostname`"
 
-if [ -d $WALLPAPERS ]; then
-    ALIST=( `ls -w1 $HOME/.backgrounds` )
-    RANGE=${#ALIST[@]}
-    let "number = $RANDOM"
-    let LASTNUM="`cat $WALLPAPERS/.last` + $number"
-    let "number = $LASTNUM % $RANGE"
-    rm $WALLPAPERS/.last
-    echo $number > $WALLPAPERS/.last
-
+if [ -d $wallpapers ]; then
+    last="$wallpapers/.last"
+    alist=( `find $wallpapers -type f -not -name ".last"` )
+    range=${#alist[@]}
+    if [ -f $last ]; then
+        lastnum="`cat $last`"
+    else
+        lastnum=-1
+    fi
+    while [ $((rand=$RANDOM%$range)) == $lastnum  ]; do
+        :;
+    done
+    rm $last
+    echo $rand > $last
     if type display > /dev/null; then
-        display -window root $WALLPAPERS/${ALIST[$number]}
+        display -window root ${alist[$rand]}
     elif type feh > /dev/null; then
-        feh --bg-scale $WALLPAPERS/${ALIST[$number]}
+        feh --bg-scale ${alist[$rand]}
     else
         echo `basename $0`: no suitable software found
     fi
 fi
+
