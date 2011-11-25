@@ -1,6 +1,6 @@
 #!/bin/bash
 
-wallpapers="$HOME/.backgrounds/`hostname`"
+wallpapers="$HOME/.backgrounds/`hostname`/"
 
 if [ -d $wallpapers ]; then
     last="$wallpapers/.last"
@@ -14,7 +14,7 @@ if [ -d $wallpapers ]; then
     while [ $((rand=$RANDOM%$range)) == $lastnum  ]; do
         :;
     done
-    rm $last
+    rm -f $last
     echo $rand > $last
     if type display > /dev/null; then
         display -window root ${alist[$rand]}
