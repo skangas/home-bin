@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# Shell wrapper for ncmpcpp that starts mpd if it is not already running.
+
+options="$@"
+
+if [ "`pidof mpd`" == "" ] && [ "$options" != "" ]; then
+   mpd
+fi
+
+/usr/bin/ncmpcpp $options

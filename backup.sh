@@ -9,7 +9,7 @@ if [ `mount | grep "on /mnt/backup type" > /dev/null` ]; then
     mount /mnt/backup/
 fi
 
-# do the backup only when mount scuceded
+# do the backup only when mount succeded
 if [ `mount | grep "on /mnt/backup type" > /dev/null` ]; then
     exit 1
 fi
