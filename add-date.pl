@@ -7,7 +7,7 @@ use English;
 
 =head1 NAME
 
-add-date.pl - add ctime and mtime to a file
+add-date - add mtime to the beginning a file
 
 =cut
 
@@ -20,9 +20,7 @@ my $stat = stat($file);
 
 my $fmt = 'yyyy-MM-dd hh:mm:ss';
 
-my $ctime = DateTime->from_epoch(epoch => $stat->ctime)->format_cldr($fmt);
 my $mtime = DateTime->from_epoch(epoch => $stat->mtime)->format_cldr($fmt);
-my $now   = DateTime->now                              ->format_cldr($fmt);
 
 {
     local @ARGV = ($file);
@@ -30,7 +28,6 @@ my $now   = DateTime->now                              ->format_cldr($fmt);
     while (<>) {
         if ($. == 1) {
             print "|-----------------------------|\n";
-            print "| Skapad: $ctime |\n";
             print "| Ändrad: $mtime |\n";
             print "|-----------------------------|\n";
             print "\n";
