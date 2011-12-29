@@ -4,7 +4,7 @@
 
 options="$@"
 
-if [ "`pidof mpd`" == "" ] && [ "$options" != "" ]; then
+if [ "`pidof mpd`" == "" ] && [ "$options" == "" ]; then
    mpd
 fi
 

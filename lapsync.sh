@@ -16,8 +16,8 @@ do_backup   News        $BDIR
 do_backup   code        $BDIR
 do_backup   wip         $BDIR
 
-# Should be moved to git
 do_backup   dokument    $BDIR
+do_backup   .repos      $BDIR
 
 # Not very critical stuff
 do_backup   books       $BDIR
