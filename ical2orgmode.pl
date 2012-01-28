@@ -1,18 +1,13 @@
 #!/usr/bin/perl
 
-package ical2orgmode;
-
-use warnings;
-use strict;
 use 5.010;
+use strict;
 
 =head1 NAME
 
 ical2orgmode.pl - Convert iCalendar to org-mode format
 
 =cut
-
-our $VERSION = '0.01';
 
 use Data::Dumper;
 
@@ -25,13 +20,19 @@ say "* Schema" . (" " x 60) . ":school:";
 
 MAIN:
 for my $entry (@{$cal->entries}) {
-    my %prop = get_properties($entry, qw/summary location dtend dtstart/);
+    my %prop = get_properties($entry, qw/summary description location dtend dtstart/);
     for my $key (keys %prop) {
         defined $prop{$key} || next MAIN;
     }
 
+    # Fix stuff for buggy timeedit
+    my $desc = $prop{'description'};
+    $desc =~ s/\n/ /g;
+    $desc =~ s/ +/ /g;
+    my $summary = $desc;
+
     ### SUMMARY
-    my $summary = $prop{'summary'};
+    # my $summary = $prop{'summary'};
     # $summary =~ s/--\n//;
 
     $summary =~ s/
@@ -81,7 +82,7 @@ sub get_properties {
 
 =head1 CAVEAT
 
-This code will silently discard any data that looks unfamiliar.
+This code will probably not work for your data without some adaption.
 
 =head1 COPYRIGHT
 
