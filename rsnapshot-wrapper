@@ -13,5 +13,5 @@ if [ `mount | grep "on /mnt/backup type" > /dev/null` ]; then
     exit 1
 fi
 
-/usr/bin/rsnapshot $@
+nice -n19 ionice -c3 /usr/bin/rsnapshot $@
 
