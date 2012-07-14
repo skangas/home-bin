@@ -16,5 +16,5 @@ fi
 nice -n19 ionice -c3 /usr/bin/rsnapshot $@
 
 umount /mnt/backup
-lvchange -a n huey-backup
-cryptsetup luksClose backup
+/sbin/lvchange -a n huey-backup
+/sbin/cryptsetup luksClose backup
