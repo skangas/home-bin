@@ -1,5 +1,24 @@
 #!/bin/bash
 
+enc_mp3() {
+    file=$1
+
+    OUTF=`echo "$file" | sed s/\.flac$/.mp3/g`
+    
+    ARTIST=`metaflac "$file" --show-tag=ARTIST | sed s/.*=//g`
+    TITLE=`metaflac "$file" --show-tag=TITLE | sed s/.*=//g`
+    ALBUM=`metaflac "$file" --show-tag=ALBUM | sed s/.*=//g`
+    GENRE=`metaflac "$file" --show-tag=GENRE | sed s/.*=//g`
+    TRACKNUMBER=`metaflac "$file" --show-tag=TRACKNUMBER | sed s/.*=//g`
+    DATE=`metaflac "$file" --show-tag=DATE | sed s/.*=//g`
+    
+    flac -c -d "$file" | lame -m j -q 0 $LAMEQUALOPT - "$OUTF"
+    id3v2 -2 -t "$TITLE" -T "${TRACKNUMBER:-0}" -a "$ARTIST" -A "$ALBUM" -y "$DATE" -g "${GENRE:-12}" "$OUTF"
+    
+    # delete file when done
+    #rm -f "$file"
+}
+
 case $1 in
 v0)
 	LAMEQUALOPT="-V 0 --vbr-new";;
@@ -12,31 +31,15 @@ v2)
 	exit 1;;
 esac
 
-# display cruft
-find -type f -iname "*.!ut"
+#if [ "$2x" == "x" ]; then
 
-# remove cruft
-find -type f \( -iname "*.m3u" -or -iname "*.m3u8" -or -iname "*.cue" -or -iname "*.sfv" \) -delete
+enc_mp3 "$2"
 
-# encode
-find -type f -iname '*.flac' -print0 | while read -d $'\0' file
+# # display cruft
+# find -type f -iname "*.!ut"
 
-do
-OUTF=`echo "$file" | sed s/\.flac$/.mp3/g`
+# # remove cruft
+# find -type f \( -iname "*.m3u" -or -iname "*.m3u8" -or -iname "*.cue" -or -iname "*.sfv" \) -delete
 
-ARTIST=`metaflac "$file" --show-tag=ARTIST | sed s/.*=//g`
-TITLE=`metaflac "$file" --show-tag=TITLE | sed s/.*=//g`
-ALBUM=`metaflac "$file" --show-tag=ALBUM | sed s/.*=//g`
-GENRE=`metaflac "$file" --show-tag=GENRE | sed s/.*=//g`
-TRACKNUMBER=`metaflac "$file" --show-tag=TRACKNUMBER | sed s/.*=//g`
-DATE=`metaflac "$file" --show-tag=DATE | sed s/.*=//g`
-
-flac -c -d "$file" | lame -m j -q 0 $LAMEQUALOPT - "$OUTF"
-id3v2 -2 -t "$TITLE" -T "${TRACKNUMBER:-0}" -a "$ARTIST" -A "$ALBUM" -y "$DATE" -g "${GENRE:-12}" "$OUTF"
-
-echo "NEXT $file"
-
-# delete file when done
-rm -f "$file"
-
-done
+# # encode
+# find -type f -iname '*.flac' -print0 | while read -d $'\0' file do enc_mp3 $file; done
