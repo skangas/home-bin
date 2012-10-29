@@ -7,7 +7,7 @@ find -type f -iname "*.!ut"
 find -type f \( -iname "*.m3u" -or -iname "*.m3u8" -or -iname "*.cue" -or -iname "*.sfv" \) -delete
 
 # encode
-find -type f -iname "*.flac" -exec oggenc -q8 {} \; -delete
+find -type f -iname "*.flac" -exec oggenc -q4 {} \; -delete
 
 # vorbisgain
 type vorbisgain
