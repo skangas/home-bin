@@ -8,6 +8,8 @@ if [ ! `mount | grep "on /mnt/backup type" > /dev/null` ]; then
     /home/skangas/bin/mount-backup.sh
 fi
 
+echo "mounted successfully"
+
 # do the backup only when mount succeded
 if [ `mount | grep "on /mnt/backup type" > /dev/null` ]; then
     exit 1
