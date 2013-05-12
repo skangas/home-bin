@@ -11,7 +11,7 @@ webpass.pl - generate SHA-1 passwords using file as salt
 =cut
 
 use Data::Dumper;
-use Digest::SHA1  qw(sha1 sha1_hex sha1_base64);
+use Digest::SHA qw(sha1_base64);
 use File::Slurp qw(slurp);
 
 my $site = $ARGV[0];
