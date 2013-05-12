@@ -1,5 +1,7 @@
 #!/bin/bash
 
+exit
+
 BACKUP_DIRECTORY=/mnt/backup
 HOST=`hostname`
 
