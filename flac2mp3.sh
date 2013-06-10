@@ -24,6 +24,8 @@ v0)
 	LAMEQUALOPT="-V 0 --vbr-new";;
 v2)
 	LAMEQUALOPT="-V 2 --vbr-new";;
+v3)
+	LAMEQUALOPT="-V 3 --vbr-new";;
 320)
 	LAMEQUALOPT="-b 320";;
 *)
