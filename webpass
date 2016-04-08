@@ -6,29 +6,88 @@ use strict;
 
 =head1 NAME
 
-webpass.pl - generate SHA-1 passwords using file as salt
+webpass - generate SHA-1 passwords using file as salt
 
 =cut
 
 use Data::Dumper;
 use Digest::SHA qw(sha1_base64);
 use File::Slurp qw(slurp);
+use Getopt::Long;
+
+my %options = (
+    'debug' => 0,
+    'old'   => 0,
+    'print' => 0,
+    );
+
+GetOptions(
+    'debug' => \$options{debug},
+    'old'   => \$options{old},
+    'print' => \$options{print},
+    ) or die "Unable to get command line options";
 
 my $site = $ARGV[0];
 my $passfile = $ARGV[1];
 
-$site //= "example.com";
-$passfile //= "$ENV{HOME}/bin/.webpass";
+$site //= "";
+if ($options{old}) {
+    dprint("Using old");
+    $passfile //= "$ENV{HOME}/bin/.webpass-old";
+} else {
+    dprint("Using new");
+    $passfile //= "$ENV{HOME}/bin/.webpass";
+}
+
+dprint("Site:     '$site'");
+dprint("Passfile: '$passfile'");
 
 my $pass = slurp($passfile);
+chomp($pass);
+# dprint("Password: '$pass'");
 
-my $generated = substr sha1_base64($pass . ":" . $site), 0, 8;
-$generated .= "1a";
+my $password = sha1_base64($pass . ":" . $site);
+if ($options{old}) {
+    $password = substr($password, 0, 8) . '1a';
+} else {
+    $password = substr($password, 0, 13) . '@1a';
+}
 
-Clipboard->copy($generated);
+if ($options{print}) {
+    say "Password: $password";
+}
 
+Clipboard->copy($password);
+
+sub dprint {
+    if ($options{debug}) {
+        say @_;
+    }
+
+}
+
+=head1 SEE ALSO
+
+http://www.angel.net/~nic/passwd.sha1.1a.html
+
+=head1 AUTHOR
+
+Stefan Kangas C<< <skangas at skangas.se> >>
+
+=head1 COPYRIGHT
+
+Copyright 2010-2016 Stefan Kangas, all rights reserved.
+
+=head1 LICENSE
+
+This program is free software; you can redistribute it and/or modify it
+under the same terms as perl itself.
+
+=cut
+
+#### INLINED CLIPBOARD MODULE #####
+# This code is from Cliboard v0.13 by Ryan King (found on CPAN)
 BEGIN {
-    # This code is from Cliboard v0.13 by Ryan King (found on CPAN)
     package Clipboard;
     sub copy {
         my $self = shift;
@@ -73,22 +132,3 @@ Here's the project homepage: http://sourceforge.net/projects/xclip/
 EPIGRAPH
     }
 }
-
-=head1 SEE ALSO
-
-http://www.angel.net/~nic/passwd.sha1.1a.html
-
-=head1 AUTHOR
-
-Stefan Kangas C<< <skangas at skangas.se> >>
-
-=head1 COPYRIGHT
-
-Copyright 2010 Stefan Kangas, all rights reserved.
-
-=head1 LICENSE
-
-This program is free software; you can redistribute it and/or modify it
-under the same terms as perl itself.
-
-=cut
