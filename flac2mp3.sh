@@ -1,5 +1,16 @@
 #!/bin/bash
 
+missing() {
+    our_bin=$1
+    echo $our_bin "is missing"
+    exit 1
+}
+
+type metaflac &>/dev/null || missing metaflac
+type flac &>/dev/null || missing flac
+type lame &>/dev/null || missing lame
+type id3v2 &>/dev/null || missing id3v2
+
 enc_mp3() {
     file=$1
 
