@@ -1,4 +1,4 @@
-#!/usr/bin/awk -f
+#!/usr/bin/env gawk -f
 # awk script for converting an iCal formatted file to a sequence of org-mode headings.
 # this may not work in general but seems to work for day and timed events from Google's
 # calendar, which is really all I need right now...
@@ -45,7 +45,7 @@
 # repository...
 #
 # Updated by: Guido Van Hoecke <guivhoATgmailDOTcom>
-# Last change: 2013.05.26 14:28:33
+# Last change: 2018.04.01 12:39:20
 #----------------------------------------------------------------------------------
 
 BEGIN {
@@ -80,10 +80,10 @@ BEGIN {
     trimdots = 1;
 
     # change this to your name
-    author = "Eric S Fraga"
+    author = "Stefan Kangas"
 
     # and to your email address
-    emailaddress = "e.fraga@ucl.ac.uk"
+    emailaddress = "stefankangas@gmail.com"
 
     ### end config section
 
