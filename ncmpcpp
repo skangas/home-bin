@@ -4,8 +4,14 @@
 
 options="$@"
 
-if [ "`pidof mpd`" == "" ] && [ "$options" == "" ]; then
+if [ "`ps -A | grep -m1 mpd | awk '{print $1}'`" == "" ] && [ "$options" == "" ]; then
    mpd
 fi
 
-/usr/bin/ncmpcpp $options
+if [ -e /usr/bin/ncmpcpp ]; then
+    /usr/bin/ncmpcpp $options
+elif [ -e /usr/local/bin/ncmpcpp ]; then
+    /usr/local/bin/ncmpcpp $options
+else
+    echo "ncmpcpp: command not found"
+fi
