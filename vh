@@ -117,7 +117,7 @@ function spawn_git_environment () {
     
     # spawn shell
     stty sane
-    $SHELL --norc -i
+    bash --norc -i
 } # end spawn_git_environment
 
 #
