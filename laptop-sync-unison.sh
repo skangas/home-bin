@@ -4,9 +4,16 @@ source ~/bin/lib
 
 [[ `uname` == "Darwin" ]] || exit 1
 
-UNISON="unison -ui text -batch -silent"
+if [[ "$1" == "-v" ]]; then
+    VERBOSE=""
+else
+    VERBOSE="-silent"
+fi
+
+UNISON="unison -ui text -batch $VERBOSE"
 
 if _allowed_network; then
+    echo "BAJS"
     #echo ">>>>> elfeed"
     $UNISON -prefer newer /Users/skangas/.elfeed ssh://skangas@sk1917.duckdns.org/.elfeed
 
@@ -22,5 +29,7 @@ if _allowed_network; then
 else
     # We are probably on mobile data.  Synchronize *only* things that require
     # low bandwith -- that is, not the notmuch tags.
-    $UNISON -ignore="Path .notmuch" /Users/skangas/Mail ssh://skangas@sk1917.duckdns.org/Mail
+    echo "MOBILE?"
+
+    # $UNISON -ignore="Path .notmuch" /Users/skangas/Mail ssh://skangas@sk1917.duckdns.org/Mail
 fi
