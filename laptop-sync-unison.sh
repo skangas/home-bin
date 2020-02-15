@@ -4,16 +4,23 @@ source ~/bin/lib
 
 [[ `uname` == "Darwin" ]] || exit 1
 
-if [[ "$1" == "-v" ]]; then
-    VERBOSE=""
-else
-    VERBOSE="-silent"
-fi
+while getopts ":vf" opt; do
+  case ${opt} in
+    v )
+        VERBOSE="-silent"
+        ;;
+    f )
+        FORCE=1
+        ;;
+    \? )
+        echo "Usage: $0 [-f] [-v]"
+        ;;
+  esac
+done
 
 UNISON="unison -ui text -batch $VERBOSE"
 
-if _allowed_network; then
-    echo "BAJS"
+if _allowed_network || [[ $FORCE ]]; then
     #echo ">>>>> elfeed"
     $UNISON -prefer newer /Users/skangas/.elfeed ssh://skangas@sk1917.duckdns.org/.elfeed
 
@@ -27,9 +34,9 @@ if _allowed_network; then
     $UNISON /Users/skangas/Mail ssh://skangas@sk1917.duckdns.org/Mail
 
 else
+    true # do nothing
     # We are probably on mobile data.  Synchronize *only* things that require
     # low bandwith -- that is, not the notmuch tags.
-    echo "MOBILE?"
 
     # $UNISON -ignore="Path .notmuch" /Users/skangas/Mail ssh://skangas@sk1917.duckdns.org/Mail
 fi
