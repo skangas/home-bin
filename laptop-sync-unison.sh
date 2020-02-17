@@ -3,6 +3,9 @@
 # This runs automatically from crontab on my laptop.
 # See alse laptop-backup.sh
 
+REMOTE_HOST=ssh://skangas@sk1917.duckdns.org
+VERBOSE="-silent"
+
 source ~/bin/lib
 
 [[ `uname` == "Darwin" ]] || exit 1
@@ -10,7 +13,7 @@ source ~/bin/lib
 while getopts ":vf" opt; do
   case ${opt} in
     v )
-        VERBOSE="-silent"
+        VERBOSE=""
         ;;
     f )
         FORCE=1
@@ -23,23 +26,24 @@ done
 
 UNISON="unison -ui text -batch $VERBOSE"
 
+# Always do this.
+$UNISON -prefer newer /Users/skangas/.notmuch-config ${REMOTE_HOST}/.notmuch-config
+$UNISON -prefer newer /Users/skangas/.msmtprc ${REMOTE_HOST}/.msmtprc
+
+# Only do this on a high-speed network.
 if _allowed_network || [[ $FORCE ]]; then
-    #echo ">>>>> elfeed"
-    $UNISON -prefer newer /Users/skangas/.elfeed ssh://skangas@sk1917.duckdns.org/.elfeed
+    echo "YES"
+    exit
 
-    #echo ">>>>> notmuch"
-    $UNISON -prefer newer /Users/skangas/.notmuch-config ssh://skangas@sk1917.duckdns.org/.notmuch-config
-
-    #echo ">>>>> msmtprc"
-    $UNISON -prefer newer /Users/skangas/.msmtprc ssh://skangas@sk1917.duckdns.org/.msmtprc
+    $UNISON -prefer newer /Users/skangas/.elfeed ${REMOTE_HOST}/.elfeed
 
     #echo ">>>>> Mail"
-    $UNISON /Users/skangas/Mail ssh://skangas@sk1917.duckdns.org/Mail
+    $UNISON /Users/skangas/Mail ${REMOTE_HOST}/Mail
 
 else
     true # do nothing
     # We are probably on mobile data.  Synchronize *only* things that require
     # low bandwith -- that is, not the notmuch tags.
 
-    # $UNISON -ignore="Path .notmuch" /Users/skangas/Mail ssh://skangas@sk1917.duckdns.org/Mail
+    # $UNISON -ignore="Path .notmuch" /Users/skangas/Mail ${REMOTE_HOST}/Mail
 fi
