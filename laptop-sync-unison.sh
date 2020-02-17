@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# This runs automatically from crontab on my laptop.
+# See alse laptop-backup.sh
+
 source ~/bin/lib
 
 [[ `uname` == "Darwin" ]] || exit 1
