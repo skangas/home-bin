@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# Copyright 2020 Stefan Kangas.
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# List of networks where we should allow expensive operations.
+ALLOWED_NETWORKS=( "SKHOME" "SKHOME_5G" "TN_24GHz_F51C61" "WIFIHUB_397c77" )
+# ALLOWED_NETWORKS=("BAJS")
+
+# Trim whitespace left/right.
+_string_trim() {
+    echo -ne "${1}" | sed -e 's/^[[:space:]]*//' | sed -e 's/[[:space:]]*$//'
+}
+
+# Return network name on macOS.
+_network_name_macos() {
+    _string_trim `/System/Library/PrivateFrameworks/Apple80211.framework/Resources/airport -I | awk -F: '/ SSID/{print $2}'`
+}
+
+# Exit unless the network is allowed.
+_allowed_network() {
+  local e network=`_network_name_macos`
+  for e in ${ALLOWED_NETWORKS[@]}; do
+      [[ "$e" == "$network" ]] && return 0
+  done
+  # No match
+  return 1
+}
