@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # List of networks where we should allow expensive operations.
-ALLOWED_NETWORKS=( "SKHOME" "SKHOME_5G" "TN_24GHz_F51C61" )
+ALLOWED_NETWORKS=( "SKHOME" "SKHOME_5G" "TN_24GHz_F51C61" "WIFIHUB_397c77" )
 # ALLOWED_NETWORKS=("BAJS")
 
 # Trim whitespace left/right.

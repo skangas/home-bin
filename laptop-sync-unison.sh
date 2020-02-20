@@ -3,6 +3,8 @@
 # This runs automatically from crontab on my laptop.
 # See alse laptop-backup.sh
 
+cd $HOME
+
 REMOTE_HOST=ssh://skangas@sk1917.duckdns.org
 VERBOSE="-silent"
 
@@ -32,13 +34,10 @@ $UNISON -prefer newer /Users/skangas/.msmtprc ${REMOTE_HOST}/.msmtprc
 
 # Only do this on a high-speed network.
 if _allowed_network || [[ $FORCE ]]; then
-    echo "YES"
-    exit
-
     $UNISON -prefer newer /Users/skangas/.elfeed ${REMOTE_HOST}/.elfeed
 
     #echo ">>>>> Mail"
-    $UNISON /Users/skangas/Mail ${REMOTE_HOST}/Mail
+    $UNISON -prefer newer /Users/skangas/Mail ${REMOTE_HOST}/Mail
 
 else
     true # do nothing
