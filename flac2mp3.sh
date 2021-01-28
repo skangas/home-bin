@@ -27,7 +27,7 @@ enc_mp3() {
     id3v2 -2 -t "$TITLE" -T "${TRACKNUMBER:-0}" -a "$ARTIST" -A "$ALBUM" -y "$DATE" -g "${GENRE:-12}" "$OUTF"
     
     # delete file when done
-    #rm -f "$file"
+    rm -f "$file"
 }
 
 case $1 in
