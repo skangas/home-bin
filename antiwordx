@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# From https://notmuchmail.org/pipermail/notmuch/2017/023855.html
+
+tmpfile=$(mktemp /tmp/antiwordx.XXXXXX.docx)
+trap 'rm -f -- "$tmpfile"' INT TERM HUP EXIT
+cat > "$tmpfile"
+pandoc -r docx -w markdown "$tmpfile"
