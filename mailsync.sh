@@ -14,3 +14,5 @@ cd $MAIL_ROOT
 $GMI manage_queue --quiet -r -C ~/.mail/account.gmail
 $GMI sync $GMI_FLAGS
 notmuch new $NOTMUCH_FLAGS
+
+echo $(date "+%Y-%m-%d %H:%M") "*** DONE *** "
