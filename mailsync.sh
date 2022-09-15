@@ -6,8 +6,10 @@
 # configuration
 MAIL_ROOT=~/.mail/account.gmail/
 GMI=$HOME/src/lieer/gmi
-GMI_FLAGS="--quiet"
-NOTMUCH_FLAGS="--quiet"
+GMI_FLAGS=""
+#GMI_FLAGS="--quiet"
+NOTMUCH_FLAGS=""
+#NOTMUCH_FLAGS="--quiet"
 
 # sync mail
 cd $MAIL_ROOT
