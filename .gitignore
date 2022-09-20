@@ -13,3 +13,9 @@ projectzomboid.sh
 unison
 winetricks
 youtube-dl
+
+# tumblrpost.pl
+.tumblremail
+.tumblrpass
+.tumblrurl
+.tumblruser
