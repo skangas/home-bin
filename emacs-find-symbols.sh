@@ -15,6 +15,13 @@
 ## You should have received a copy of the GNU General Public License
 ## along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.
 
+setopt -o nounset
+setopt -o errexit
+
+[ -e "admin/admin.el"] || exit 1
+
+printf "Searching for typos in symbols (very slow)..." >&2
+
 # Minimum length of symbols
 MINLENGTH=6
 
@@ -22,15 +29,26 @@ MINLENGTH=6
 IGNORED=(
     "Buffer-menu-sort-by-column"
     "FOO-unload-hook" # example
+    "IT-display-table-setup" # example
+    "NAME-highlight-default" example
+    "NAME-p-default"
     "advice-bottom"
     "align-CATEGORY-modes" # example
     "array-element"
     "artist-fc-get-MEMBER-from-symbol" # example
     "artist-go-get-MEMBER-from-symbol" # example
     "auto-resize-tool-bars"
+    "bib-mode-abbrev-table"
     "compose-chars-after-function"
     "do-forever"
+    "dos-print-region-function"
+    "egg-self-insert-command" # external
+    "eldoc-docstring-format-sym-doc" # old, used in docs
+    "encoding-vector" # used in ps-mode.el as PostScript output
+    "erc-server-ALIAS-functions" # example
+    "ert--explain-equal-including-properties-rec" # planned rename
     "etch-a-sketch"
+    "executable-map" # implicitly defined
     "ffap-noselect" # proposed name
     "fff-find-loaded-emacs-lisp-function" # old name
     "foldout-enter-subtree"
@@ -100,7 +118,6 @@ IGNORED=(
     "when-mapped"
 )
 
-
 find_matches() {
     while read symbol; do
         if [[ ! " ${IGNORED[@]} " =~ ${symbol} ]]; then
@@ -123,3 +140,5 @@ find . -path "./lisp/obsolete" -prune -o \
     grep -E '^[^-`][A-Za-z0-9/-]+$' |
     grep '-' |
     find_matches
+
+exit 0
