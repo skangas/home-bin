@@ -49,10 +49,14 @@ IGNORED=(
     "ert--explain-equal-including-properties-rec" # planned rename
     "etch-a-sketch"
     "executable-map" # implicitly defined
+    "face-near-same-color-threshold" # in xface.c
+    "faces-xface" # example
     "ffap-noselect" # proposed name
     "fff-find-loaded-emacs-lisp-function" # old name
     "foldout-enter-subtree"
     "foo-archive" # example
+    "flycheck-indication-mode" # external package
+    "hairy-fontify-syntactically-region" # example
     "command-error-default-function" # built-in
     "delete-after-apply" # proposed name
     "default-next-file" # proposed name
@@ -73,6 +77,8 @@ IGNORED=(
     "inferior-tcl-mode-hook"
     "libgr-progs"
     "mh-show-foo" # example
+    "my-bad-c-style-regexp" # example
+    "my-function" # example
     "prop-match-value" # struct accessor
     "tempo-template-foo" # example
     "looking-at-backward"
@@ -98,6 +104,7 @@ IGNORED=(
     "reverse-ordered-alist"
     "rst-compile-html-preview"
     "rst-over-and-under-default-indent"
+    "set-process-stderr" # proposed name
     "shell-dynamic-complete-process-environment-variable" # proposed name
     "shift-always"
     "shift-default"
@@ -110,11 +117,15 @@ IGNORED=(
     "strokes-local-set-stroke"
     "strokes-read-stroke-hook"
     "sudo-call-process"
+    "template-cont-nonempty" # proposed name
     "true-color"
     "unordered-or"
+    "utf-16le-dos" # dos?
     "vhdl-additional-empty-lines"
     "visible-whitespace-mappings"
     "w32-downcase-file-names"
+    "w32-set-console-codepage"
+    "wrong-argument-type"
     "when-mapped"
 )
 
