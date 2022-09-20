@@ -1,8 +1,15 @@
 .webpass
-emms-print-metadata
-git-bzr
 nnrss.sh
 nnshimbun.sh
 postreview.py
+
+# some stuff that might be installed locally
+drush
+emacsclient
+emms-print-metadata
+git-bzr
+mktorrent
+projectzomboid.sh
 unison
 winetricks
+youtube-dl
