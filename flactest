@@ -1,0 +1,236 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use Cwd;
+use File::Basename qw/basename/;
+use File::Find qw/find/;
+use File::Path qw/mkpath/;
+use File::Copy qw/copy/;
+use Getopt::Long;
+Getopt::Long::Configure("permute");
+
+my ($verbose, $moveother, $output);
+
+##############################################################
+# flactest - make spectrograms of flac files, calculate crc32
+# Created by elvetic
+# Based on whatmp3 by shardz (logik.li)
+# Which was based on: Flac to Mp3 Perl Converter by Somnorific
+# Which was based on: Scripts by Falkano and Nick Sklaventitis
+##############################################################
+
+my $VERSION = "0.4";
+
+# Do you always want to move additional files (.jpg, .log, etc)?
+$moveother = 0;
+
+# Output folder unless specified: ("/home/samuel/Desktop/")
+$output = "";
+
+
+###
+# End of configuration
+###
+
+sub help {
+    print<<__EOH__;
+flactest version $VERSION
+
+flactest makes png spectrograms of input flacs in specified folder,
+calculates crc and compares them with such in log file.
+
+Usage: flactest [options] flac_dir
+
+Options:
+        --help
+                print help message and quit
+        --verbose
+                increase verbosity (default false)
+        --moveother
+                move other files in flac directory to spectrograms directory (default true)
+        --output="PATH"
+                specify output directory for spectrograms
+
+flactest depends on flac, metaflac, sox, imagemagick, optipng, crc32.
+__EOH__
+exit;
+}
+
+my (@flac_dirs);
+
+sub process {
+        my $arg = shift @_;
+        chop($arg) if $arg =~ m'/$';
+        push(@flac_dirs, $arg);
+}
+
+GetOptions('help' => \&help, 'verbose' => \$verbose, 'moveother' => \$moveother, 'output=s' => \$output,  '<>' => \&process);
+
+$output ||= "./";
+$output =~ s'/?$'/' if $output; # Add a missing /
+
+unless (@flac_dirs) {
+    print "Need FLAC file parameter\n";
+    exit 0;
+}
+
+die "Need FLAC file parameter\n" unless @flac_dirs;
+
+foreach my $flac_dir (@flac_dirs) {
+    my (@files, @dirs, @logfiles);
+    if ($flac_dir eq '.' or $flac_dir eq './') {
+        $flac_dir = cwd;
+    }
+    find( sub { push(@files, $File::Find::name) if ($File::Find::name =~ m/\.flac$/i) }, $flac_dir);
+    find( sub { push(@logfiles, $File::Find::name) if ($File::Find::name =~ m/\.log$/i) }, $flac_dir);
+
+    print "Using $flac_dir\n" if $verbose;
+
+    my $logfilename = pop @logfiles;
+    $logfilename = pop @logfiles if $logfilename =~ /audiochecker.log\z/i;
+    my $is_log;
+    my $is_xld;
+    my @crc_log = ();
+    my $Start;
+    if ($logfilename) {
+        $is_log = 1;
+        print "Parsing log file: $logfilename\n" if $verbose;
+        open(LOG, $logfilename); my @Lines = <LOG>; close LOG;
+        # XLD?
+        if ($Lines[0] =~ /X Lossless/) {
+            $is_xld = 1;
+            @Lines = grep(($_ =~ m/CRC32 hash/) && !($_ =~ /test run/) &&!($_=~ /skip zero/), @Lines );
+            $Start = 'CRC32 hash';
+
+        } else {
+            @Lines = map{ tr/\000//d; $_ } @Lines;
+            @Lines = grep(($_ =~ m/Copy CRC/), @Lines );
+            $Start = 'Copy CRC';
+        }
+
+        # filter magic strings.
+        my $End = 'aa';
+
+        foreach my $Line (@Lines)
+            {
+                ## get rid of left side...
+
+                my ($Junk,$Good) = split(/\Q$Start\E/,$Line,2);
+                # ...and :'s
+                $Good =~ s!:!!g if $is_xld;
+                # ...and spaces
+                $Good =~ s/^\s+//;
+                $Good =~ s/\s+$//;
+                print "Value '$Good'\n" if $verbose;
+                push(@crc_log,$Good);
+            }
+    } else {
+        $is_log = 0;
+        print "Log file not found\n"
+    }
+
+    my $spectro_dir = $output . basename($flac_dir) . " - SPECTRO";
+    $spectro_dir =~ s/FLAC/SPECTRO/ig;
+    mkpath($spectro_dir);
+
+    print "\nCreating spectrograms started...\n" if $verbose;
+
+    foreach my $file (@files) {
+        $file =~ s/\$/\\\$/g;   # fix error with bash and $'s
+        my $spectro_dir = $spectro_dir; # localise changes to $spectro_dir so we don't affect subsequent spectro directories
+        if ($file =~ m!\Q$flac_dir\E/(.+)/.!) {
+            $spectro_dir .= '/' . $1;
+            mkpath($spectro_dir);
+        }
+
+        my $basename = basename($file);
+        $basename =~ s/\.[^.]+$//;
+        my $spectro_filename = $spectro_dir . '/' . $basename;
+
+        #extract tracknumber
+        my $tracknumber = `metaflac --show-tag=TRACKNUMBER "$file" | awk -F = '{ printf(\$2) }'`;
+        # check it
+
+        my $crc_value = uc `flac -dc -f --totally-silent --force-raw-format --endian=little --sign=signed "$file"  > "$spectro_filename.wav"; crc32 "$spectro_filename.wav"  | awk -F = '{ printf(\$1) }'; rm "$spectro_filename.wav"`;
+        chomp $crc_value;
+        my $crc_result;
+
+        if (!$tracknumber || !$is_log){
+            $crc_result = 'UNKNOWN';
+            print "No tags/logs, no crc!\n";
+        }
+        else {
+            if ($crc_value eq $crc_log[$tracknumber-1]) {
+                $crc_result = 'ok';
+            }
+            # sometimes there is "All tracks" crc hash in XLD logs, trying to shift that
+            elsif ($is_xld){
+
+                my @crc_log_shifted =  shift(@crc_log);
+                if ($crc_value eq $crc_log[$tracknumber-1]) {
+                    $crc_result = 'ok';
+                } else {
+                    $crc_result = 'FAIL';
+                }
+
+            }
+            else {
+                $crc_result = 'FAIL';
+            }
+            unless ($crc_result eq 'ok') {
+                print "ERROR: ";
+                print "File: '$file'. Calculated crc: '$crc_value'. ";
+                print "Log crc: '$crc_log[$tracknumber-1]'. " ;
+                print "Track: $tracknumber. Matching $crc_result.\n";
+            }
+        }
+
+        ### Create spectogram 1
+        my $sox_command = "sox -q \"$file\"" .
+            ' -n remix 1 spectrogram -t "' . $file . '" ' .
+            ' -x 3000 -y 513 -z 120 -w Kaiser' .
+            ' -o "' . $spectro_filename . '.png"  &&' .
+            'convert -font helvetica -fill yellow -pointsize 25 -draw \'text 50,20 "' .$crc_value .
+            ' ' . $crc_result . '"\' '.
+            ' "' . $spectro_filename . '.png" ' .
+            ' "' . $spectro_filename . '.png"';
+        print "$sox_command\n" if $verbose;
+        system($sox_command);
+
+        ### Create spectogram 2
+        $sox_command = "sox -q \"$file\"" .
+            ' -n remix 1 spectrogram -t "' . $file . '" ' .
+            ' -X 500 -y 1025 -z 120 -w Kaiser -S 1:00 -d 0:02' .
+            ' -o "' . $spectro_filename . '-zoom.png"  &&' .
+            'convert -font helvetica -fill yellow -pointsize 25 -draw \'text 50,20 "' .$crc_value .
+            ' ' . $crc_result . '"\' '.
+            ' "' . $spectro_filename . '-zoom.png" ' .
+            ' "' . $spectro_filename . '-zoom.png"';
+        print "$sox_command\n" if $verbose;
+        system($sox_command);
+        print "\nCreating of spectrograms of $spectro_filename finished... $crc_result\n" if $verbose;
+
+        # Optimizing png
+        # system('optipng -quiet "' . $spectro_filename . '.png"');
+        # system('optipng -quiet "' . $spectro_filename . '-zoom.png"');
+
+        if ($moveother) {
+            print "Moving other files... " if $verbose;
+
+            my $base_spectro_dir = basename($spectro_dir);
+            find( { wanted => sub {
+                        if ($File::Find::name !~ m/\.flac$/i and $File::Find::name !~ m!\Q$base_spectro_dir\E!) {
+                            if ($File::Find::name =~ m!\Q$flac_dir\E/(.+)/.!) {
+                                mkpath($spectro_dir . '/' . $1);
+                                copy($File::Find::name, $spectro_dir . '/' . $1);
+                            } else {
+                                copy($File::Find::name, $spectro_dir);
+                            }
+                        }
+                    }, no_chdir => 1 }, $flac_dir);
+        }
+
+    }
+    print "All done with $flac_dir...\n";
+}
