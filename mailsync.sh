@@ -24,6 +24,8 @@ GMI=$HOME/src/lieer/gmi
 GMI_FLAGS="--quiet"
 NOTMUCH_FLAGS="--quiet"
 
+echo $(date "+%Y-%m-%d %H:%M:%S") "*** START *** "
+
 # sync mail
 cd $MAIL_ROOT
 echo "Sending emails ('gmi manage_queue')..."
@@ -33,4 +35,4 @@ $GMI sync $GMI_FLAGS
 echo "Filtering emails ('notmuch new')..."
 notmuch new $NOTMUCH_FLAGS
 
-echo $(date "+%Y-%m-%d %H:%M") "*** DONE *** "
+echo $(date "+%Y-%m-%d %H:%M:%S") "*** DONE *** "
