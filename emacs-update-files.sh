@@ -1,6 +1,6 @@
 #!/bin/bash
 
-## Author: Stefan Kangas <stefan@marxist.se>
+## Author: Stefan Kangas <stefankangas@gmail.com>
 
 ## This file is NOT part of GNU Emacs.
 
