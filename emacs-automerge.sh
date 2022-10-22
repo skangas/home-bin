@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright © Stefan Kangas 2021 <stefankangas@gmail.com>
+# Copyright © 2021-2022 Stefan Kangas <stefankangas@gmail.com>
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,10 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+set -o nounset
+set -o errexit
+
 eval `keychain -q --eval`
 cd ~/wip/emacs-auto/emacs-automerge/
-script_loc=`mktemp`
-trap 'rm -f $script_loc 2> /dev/null' EXIT
+script_loc=$(mktemp -d)
+trap 'rm -rf $script_loc 2> /dev/null' EXIT
+cp admin/emacs-shell-lib "$script_loc"
 cp admin/automerge "$script_loc"
-chmod u+x "$script_loc"
-nice -n 19 "$script_loc" -n1 -r -b -t -p -d || exit 1
+chmod u+x "$script_loc/automerge"
+nice -n 19 "$script_loc/automerge" -n1 -r -b -t -p -d || exit 1

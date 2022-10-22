@@ -15,6 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+set -o nounset
+set -o errexit
+
 PN=${0##*/}                     # basename of script
 PD=${0%/*}
 
