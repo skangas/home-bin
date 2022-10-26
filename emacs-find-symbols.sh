@@ -127,6 +127,51 @@ IGNORED=(
     "w32-set-console-codepage"
     "wrong-argument-type"
     "when-mapped"
+
+    # in external packages
+    "adoc-mode"
+    "julia-no-select"
+    "keycast-tab-bar-mode"
+
+    # correct, defined in C
+    "inner-edges"
+
+    # face properties
+    "demi-condensed"
+    "demi-expanded"
+    "demi-light"
+
+    # examples
+    "gnus-TYPE-mode-map"
+    "hairy-fontify-region"
+    "idlwave-sint-TAGs"
+    "idlwave-sintern-TAG"
+    "isearch-toggle-MODE"
+    "rcirc-handler-ctcp-REQUEST"
+    "vc-BACKEND-diff-switches"
+    "ansi-color-COLOR"
+
+    # proposed names
+    "describe-srecode-maps"
+    "frame-state"
+    "project-build"
+    "xref-back-history-empty-p"
+
+    # obsolete symbol names, referenced for documentation
+    "emacs-czech"
+    "filter-mod"
+    "gopher-parse-bookmark"
+    "group-buffers-menu-by-mode-then-alphabetically" # XEmacs
+    "mh-visible-headers"
+    "terminal-id"
+
+    # common lisp symbol
+    "funcallable-standard-object"
+    "intersection-type" # SBCL
+
+    # valid but auto-generated
+    "erc-networks--id-fixed-p"
+    "make-wallpaper-cmd"
 )
 
 find_matches() {
