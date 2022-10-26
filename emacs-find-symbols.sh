@@ -15,10 +15,10 @@
 ## You should have received a copy of the GNU General Public License
 ## along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.
 
-setopt -o nounset
-setopt -o errexit
+set -o nounset
+set -o errexit
 
-[ -e "admin/admin.el"] || exit 1
+[ -e "./admin/admin.el" ] || exit 1
 
 printf "Searching for typos in symbols (very slow)..." >&2
 
