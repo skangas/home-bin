@@ -20,8 +20,6 @@ set -o errexit
 
 [ -e "./admin/admin.el" ] || exit 1
 
-printf "Searching for typos in symbols (very slow)..." >&2
-
 # Minimum length of symbols
 MINLENGTH=6
 
@@ -128,8 +126,15 @@ IGNORED=(
     "wrong-argument-type"
     "when-mapped"
 
+    # auto-generated symbols
+    "minibuffer-inactive-mode-hook"
+    "erc-networks--id-fixed-p"
+    "make-wallpaper-cmd"
+
     # in external packages
+    "TeX-printer-list"            # auctex
     "adoc-mode"
+    "assess-with-filesystem"      # assess
     "julia-no-select"
     "keycast-tab-bar-mode"
 
@@ -142,11 +147,13 @@ IGNORED=(
     "demi-light"
 
     # examples
+    "nnchoke-request-accept-article"
     "gnus-TYPE-mode-map"
     "hairy-fontify-region"
     "idlwave-sint-TAGs"
     "idlwave-sintern-TAG"
     "isearch-toggle-MODE"
+    "org-lint-NAME"
     "rcirc-handler-ctcp-REQUEST"
     "vc-BACKEND-diff-switches"
     "ansi-color-COLOR"
@@ -159,7 +166,9 @@ IGNORED=(
 
     # obsolete symbol names, referenced for documentation
     "emacs-czech"
+    "filesets-subdocument--cache" # filesets
     "filter-mod"
+    "lazy-lock-fontify-after-outline"
     "gopher-parse-bookmark"
     "group-buffers-menu-by-mode-then-alphabetically" # XEmacs
     "mh-visible-headers"
@@ -168,10 +177,6 @@ IGNORED=(
     # common lisp symbol
     "funcallable-standard-object"
     "intersection-type" # SBCL
-
-    # valid but auto-generated
-    "erc-networks--id-fixed-p"
-    "make-wallpaper-cmd"
 )
 
 find_matches() {
@@ -185,6 +190,8 @@ find_matches() {
         fi
     done
 }
+
+printf "Searching for typos in symbols (very slow)...\n" >&2
 
 # `symbols' in .el files
 find . -path "./lisp/obsolete" -prune -o \

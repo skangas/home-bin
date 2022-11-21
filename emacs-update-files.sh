@@ -28,6 +28,8 @@ eval `keychain -q --eval`
 EMACS_DIR="$HOME/wip/emacs-auto/emacs-update-files"
 GIT_BRANCH="origin/master"
 
+# git branch -a |grep remotes/origin/emacs-|tail -n1|sed 's/.*emacs-\([0-9]\+\)/emacs-\1/g'
+
 die ()
 {
     [ $# -gt 0 ] && echo "$PN: $*" >&2
