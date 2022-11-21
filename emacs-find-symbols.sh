@@ -137,6 +137,7 @@ IGNORED=(
     "assess-with-filesystem"      # assess
     "julia-no-select"
     "keycast-tab-bar-mode"
+    "quail-jp"                    # quail-jp
 
     # correct, defined in C
     "inner-edges"
@@ -163,6 +164,8 @@ IGNORED=(
     "frame-state"
     "project-build"
     "xref-back-history-empty-p"
+    "project-configuration-directory"
+    "project-files-filtered"
 
     # obsolete symbol names, referenced for documentation
     "emacs-czech"
