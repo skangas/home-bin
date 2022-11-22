@@ -197,8 +197,10 @@ find_matches() {
 printf "Searching for typos in symbols (very slow)...\n" >&2
 
 # `symbols' in .el files
-find . -path "./lisp/obsolete" -prune -o \
-     -type f \( -name \*.el \) \
+find . -type d \( -path "./lisp/obsolete" -o -path ".git" \) -prune -o \
+     \! -type d \( -path "./lisp/ldefs-boot.el" -o -name "*-loaddefs.el" \) -prune -o \
+     -type f -name "*.el"
+
      -exec grep -i -h -e "\`[^']\+'" \{\} + |
     sed -nEe "s/[^\`]*\`([A-Za-z0-9-]{${MINLENGTH},})'[^\`]*/\1\n/gp" |
     sort |
