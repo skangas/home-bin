@@ -176,6 +176,8 @@ IGNORED=(
     "group-buffers-menu-by-mode-then-alphabetically" # XEmacs
     "mh-visible-headers"
     "terminal-id"
+    "c-forward-into-nomenclature"
+    "c-state-point-min-literal"
 
     # common lisp symbol
     "funcallable-standard-object"
@@ -197,11 +199,10 @@ find_matches() {
 printf "Searching for typos in symbols (very slow)...\n" >&2
 
 # `symbols' in .el files
-find . -type d \( -path "./lisp/obsolete" -o -path ".git" \) -prune -o \
-     \! -type d \( -path "./lisp/ldefs-boot.el" -o -name "*-loaddefs.el" \) -prune -o \
-     -type f -name "*.el"
-
-     -exec grep -i -h -e "\`[^']\+'" \{\} + |
+git ls-files --exclude-standard |
+    grep -Eve '(^lisp/obsolete|/ldefs-boot\.el$)' |
+    grep -Ee "\.el$" |
+    xargs grep -i -h -e "\`[^']\+'" |
     sed -nEe "s/[^\`]*\`([A-Za-z0-9-]{${MINLENGTH},})'[^\`]*/\1\n/gp" |
     sort |
     uniq |
