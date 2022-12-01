@@ -29,6 +29,7 @@ die ()                 # write error to stderr and exit
 
 eval `keychain -q --eval`
 cd ~/wip/emacs-auto/$1-loaddefs/              || die "No such directory"
+git checkout $1                               || die "Unable to checkout branch $1"
+git fetch                                     || die "Fetch error"
 git reset -q --hard origin/$1                 || die "Reset error"
-git pull -q --ff-only                         || die "Pull error"
 nice -n19 ./admin/update_autogen -C -L -c     || die "Failed"
